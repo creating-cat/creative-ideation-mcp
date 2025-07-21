@@ -51,7 +51,7 @@ Required variables:
 
 Optional variables:
 - `GEMINI_MODEL`: Gemini model to use (default: `gemini-1.5-pro`)
-- `LOG_LEVEL`: Logging level (`ERROR`, `WARN`, `INFO`, `DEBUG`)
+- `DEBUG_MCP`: Enable debug logging during development (`true`/`false`, default: `false`)
 
 ### Getting a Gemini API Key
 

@@ -56,7 +56,7 @@ server.tool(
       }
       
       // Fallback for unexpected responses
-      logger.warn('Unexpected tool response format', { result });
+      // Unexpected tool response format - handled silently
       return { 
         content: [{ 
           type: "text", 
@@ -95,10 +95,7 @@ async function startServer(): Promise<void> {
     const transport = new StdioServerTransport();
     await server.connect(transport);
     
-    logger.info('MCP Server started successfully', {
-      name: 'gemini-context-options-mcp-server',
-      version: '0.1.0'
-    });
+    // MCP Server started successfully - no logging needed for normal operation
     
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
@@ -110,12 +107,10 @@ async function startServer(): Promise<void> {
 
 // Handle graceful shutdown
 process.on('SIGINT', () => {
-  logger.info('Received SIGINT, shutting down gracefully');
   process.exit(0);
 });
 
 process.on('SIGTERM', () => {
-  logger.info('Received SIGTERM, shutting down gracefully');
   process.exit(0);
 });
 
