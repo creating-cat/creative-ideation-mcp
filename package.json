@@ -1,0 +1,43 @@
+{
+  "name": "gemini-context-options-mcp-server",
+  "version": "0.1.0",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "start": "node dist/index.js",
+    "build": "tsc",
+    "dev": "ts-node src/index.ts",
+    "check": "npx tsc --noEmit",
+    "prepare": "npm run build"
+  },
+  "bin": {
+    "gemini-context-options-mcp-server": "dist/index.js"
+  },
+  "author": "creating-cat (https://creating-cat.com/)",
+  "license": "MIT",
+  "description": "An MCP server that generates contextual categories and options for creative thinking using the Gemini API.",
+  "keywords": [
+    "gemini",
+    "context-options",
+    "categories",
+    "creative-thinking",
+    "mcp",
+    "google-ai"
+  ],
+  "files": [
+    "dist",
+    "LICENSE",
+    "README.md"
+  ],
+  "dependencies": {
+    "@google/genai": "^1.0.1",
+    "@modelcontextprotocol/sdk": "^1.12.0",
+    "dotenv": "^16.5.0",
+    "zod": "^3.25.28"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.21",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
+  }
+}
