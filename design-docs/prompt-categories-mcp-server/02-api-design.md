@@ -159,12 +159,36 @@ const OPTIONS_GENERATION_PROMPT = `
 
 ## エラーハンドリング
 
+### 高度なエラーハンドリング機能
+
+#### 1. **JSON自動修正機能**
+- JSONパースエラー時、AIによる自動修正
+- 元のコンテキストを保持した修正プロンプト
+- マークダウン記法や説明文の自動除去
+
+#### 2. **APIレスポンス前処理**
+```typescript
+function preprocessApiResponse(apiResult: any): string {
+  // マークダウンのコードブロックを取り除く
+  jsonString = jsonString.replace(/```json/g, '');
+  jsonString = jsonString.replace(/```/g, '');
+  jsonString = jsonString.trim(); // 前後の空白を削除
+  return jsonString;
+}
+```
+
+#### 3. **包括的リトライ機能**
+- 各処理段階での自動リトライ（最大3回）
+- エラー詳細ログ出力
+- 段階的エラーメッセージ
+
 ### エラーコード体系
 - `INVALID_API_KEY`: APIキーが無効または未設定
 - `API_RATE_LIMIT`: APIレート制限に達した
 - `API_SERVICE_ERROR`: APIサービスエラー
 - `INVALID_PARAMETERS`: パラメータ検証エラー
-- `PARSING_ERROR`: JSON解析エラー
+- `JSON_PARSE_ERROR`: JSON解析エラー（自動修正試行後）
+- `GENERATION_FAILED`: カテゴリー生成失敗（リトライ後）
 - `INTERNAL_ERROR`: 内部エラー
 
 ### エラーレスポンス形式
@@ -172,10 +196,12 @@ const OPTIONS_GENERATION_PROMPT = `
 {
   success: false,
   error: {
-    code: "ERROR_CODE",
-    message: "ユーザーフレンドリーなエラーメッセージ",
+    code: "GENERATION_FAILED",
+    message: "カテゴリー生成結果のJSONパースに失敗 (3回試行)",
     details: {
-      // 開発者向けの詳細情報（本番環境では省略可能）
+      retry_count: 3,
+      last_error: "AI自動修正も含めて処理に失敗しました",
+      processing_stage: "category_generation"
     }
   }
 }
@@ -183,14 +209,43 @@ const OPTIONS_GENERATION_PROMPT = `
 
 ## レート制限対応
 
-### 制限値
-- Gemini API: 60 QPM (Queries Per Minute)
-- 同時リクエスト: 最大5件
+### 自動レート制限管理
+- **5秒間隔制御**: API呼び出し間に自動的に5秒間隔を確保
+- **タイムスタンプ管理**: 前回呼び出し時刻を記録し、適切な待機時間を計算
+- **自動待機**: 必要に応じて自動的に待機処理を実行
 
-### 対応策
-- リクエストキューイング
-- 指数バックオフによる再試行
-- ユーザーへの適切な待機時間通知
+```typescript
+const MIN_API_CALL_INTERVAL_MS = 5000; // 5秒間隔
+let lastApiCallTimestamp = 0;
+
+async function callGenerativeAI(model: string, contents: string) {
+  const currentTime = Date.now();
+  const elapsedTime = currentTime - lastApiCallTimestamp;
+  
+  if (lastApiCallTimestamp !== 0 && elapsedTime < MIN_API_CALL_INTERVAL_MS) {
+    const waitTime = MIN_API_CALL_INTERVAL_MS - elapsedTime;
+    await new Promise(resolve => setTimeout(resolve, waitTime));
+  }
+  
+  lastApiCallTimestamp = Date.now();
+  return await ai.models.generateContent({ model, contents });
+}
+```
+
+### 処理時間の見積もり
+- **基本処理**: 1回のカテゴリー生成 + 15カテゴリー × (英語生成 + 翻訳)
+- **API呼び出し回数**: 約31回 (1 + 15×2)
+- **推定処理時間**: 約2.5-3分 (5秒間隔 × 30回 + 処理時間)
+
+### ユーザー通知
+```json
+{
+  "content": [{
+    "type": "text",
+    "text": "カテゴリー生成を開始します。約2-3分の処理時間が必要です。Gemini APIのレート制限により、各API呼び出し間に5秒の間隔を設けています..."
+  }]
+}
+```
 
 ## ログ仕様
 

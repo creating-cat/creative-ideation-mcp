@@ -29,7 +29,9 @@ MCPサーバーの基本構造とプロジェクト設定を完成させる。
    │   └── environment.ts    # 環境変数管理
    ├── utils/
    │   ├── logger.ts         # ログ機能
-   │   └── gemini.ts         # Gemini API クライアント
+   │   ├── gemini.ts         # Gemini API クライアント
+   │   ├── rateLimiter.ts    # レート制限管理
+   │   └── jsonCorrector.ts  # JSON自動修正機能
    ├── modules/              # 機能モジュール
    └── tools/                # MCPツール実装
    ```
