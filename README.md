@@ -88,8 +88,8 @@ Generates contextual categories and options for creative thinking.
 **Parameters:**
 - `expert_role` (string, required): The expert role perspective (e.g., "ゲームデザイナー")
 - `target_subject` (string, required): The target subject to think about (e.g., "オリジナルボードゲーム")
-- `max_categories` (number, optional): Maximum number of categories (default: 15, max: 30)
-- `max_options_per_category` (number, optional): Maximum options per category (default: 20, max: 50)
+- `max_categories` (number, optional): Target number of categories as a guideline (default: 15, max: 30)
+- `max_options_per_category` (number, optional): Target options per category as a guideline (default: 20, max: 50)
 - `domain_context` (string, optional): Additional domain-specific context
 
 **Example:**

@@ -5,17 +5,34 @@
 
 import { z } from 'zod';
 import { logger } from '../utils/logger';
-import { TopicAnalyzer } from '../modules/topicAnalyzer';
 import { CategoryGenerator } from '../modules/categoryGenerator';
 import { OptionGenerator } from '../modules/optionGenerator';
 
 // Input schema validation
 export const generateIdeaCategoriesSchema = z.object({
-  expert_role: z.string().min(1, 'Expert role is required'),
-  target_subject: z.string().min(1, 'Target subject is required'),
-  max_categories: z.number().int().min(1).max(30).optional().default(15),
-  max_options_per_category: z.number().int().min(1).max(50).optional().default(20),
-  domain_context: z.string().optional()
+  expert_role: z.string()
+    .min(1, 'Expert role is required')
+    .describe('The expert role perspective to take when generating categories (e.g., "ゲームデザイナー", "料理研究家")'),
+  target_subject: z.string()
+    .min(1, 'Target subject is required')
+    .describe('The target subject or topic to think about (e.g., "オリジナルボードゲーム", "新しいレシピ")'),
+  max_categories: z.number()
+    .int()
+    .min(10, 'Must be at least 10')
+    .max(30, 'Cannot exceed 30')
+    .optional()
+    .default(20)
+    .describe('Target number of categories to generate as a guideline (default: 20, max: 30)'),
+  max_options_per_category: z.number()
+    .int()
+    .min(10, 'Must be at least 10')
+    .max(50, 'Cannot exceed 100')
+    .optional()
+    .default(100)
+    .describe('Target number of options to generate per category as a guideline (default: 50, max: 100)'),
+  domain_context: z.string()
+    .optional()
+    .describe('Additional domain-specific context or constraints to consider (optional)')
 });
 
 export type GenerateIdeaCategoriesInput = z.infer<typeof generateIdeaCategoriesSchema>;
@@ -51,33 +68,27 @@ export const generateIdeaCategoriesTool = {
       // Validate input
       const validatedInput = generateIdeaCategoriesSchema.parse(args);
       
-      // Construct user request from input
-      const userRequest = this.constructUserRequest(validatedInput);
-      
       // Initialize modules
-      const topicAnalyzer = new TopicAnalyzer();
       const categoryGenerator = new CategoryGenerator();
       const optionGenerator = new OptionGenerator();
 
-      // Step 1: Analyze the user request
-      logger.info('Step 1: Analyzing user request');
-      const analysisResult = await topicAnalyzer.analyzeUserRequest(userRequest);
-
-      // Step 2: Generate categories
-      logger.info('Step 2: Generating categories');
+      // Step 1: Generate categories
+      logger.info('Step 1: Generating categories');
       const categories = await categoryGenerator.generateCategories(
-        analysisResult,
-        userRequest,
-        validatedInput.max_categories
+        validatedInput.expert_role,
+        validatedInput.target_subject,
+        validatedInput.max_categories,
+        validatedInput.domain_context
       );
 
-      // Step 3: Generate options for each category
-      logger.info('Step 3: Generating options for categories');
+      // Step 2: Generate options for each category
+      logger.info('Step 2: Generating options for categories');
       const categoriesWithOptions = await optionGenerator.generateOptionsForCategories(
-        analysisResult,
+        validatedInput.expert_role,
+        validatedInput.target_subject,
         categories,
-        userRequest,
-        validatedInput.max_options_per_category
+        validatedInput.max_options_per_category,
+        validatedInput.domain_context
       );
 
       // Prepare successful response
@@ -125,15 +136,6 @@ export const generateIdeaCategoriesTool = {
     }
   },
 
-  constructUserRequest(input: GenerateIdeaCategoriesInput): string {
-    let request = `${input.expert_role}として、${input.target_subject}について考えたい。`;
-    
-    if (input.domain_context) {
-      request += ` 特に${input.domain_context}の観点から。`;
-    }
-    
-    return request;
-  },
 
   getErrorCode(error: Error): string {
     if (error.message.includes('GEMINI_API_KEY')) {
