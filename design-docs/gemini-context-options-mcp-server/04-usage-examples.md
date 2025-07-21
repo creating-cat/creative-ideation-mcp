@@ -1,4 +1,4 @@
-# 使用例とユースケース
+# 使用例とユースケース - gemini-context-options-mcp-server
 
 ## 基本的な使用例
 

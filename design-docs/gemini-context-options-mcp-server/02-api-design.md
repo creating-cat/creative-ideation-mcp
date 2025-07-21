@@ -1,4 +1,4 @@
-# API設計書
+# API設計書 - gemini-context-options-mcp-server
 
 ## MCPツール仕様
 

@@ -1,4 +1,4 @@
-# 実装計画書
+# 実装計画書 - gemini-context-options-mcp-server
 
 ## 開発フェーズ
 
