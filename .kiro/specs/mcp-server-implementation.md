@@ -569,11 +569,10 @@ async function callGenerativeAI(model: string, contents: string) {
 | 変数名 | 説明 | デフォルト値 | 必須 |
 |--------|------|-------------|------|
 | `GEMINI_API_KEY` | Google Gemini APIキー | - | はい |
+| `GEMINI_MODEL` | 使用するGeminiモデル | `gemini-2.5-flash-lite-preview-06-17` | いいえ |
 | `LOG_LEVEL` | ログレベル | `INFO` | いいえ |
-| `MAX_CONCURRENT_REQUESTS` | 最大同時リクエスト数 | `5` | いいえ |
-| `DEFAULT_TARGET_CATEGORIES` | デフォルトの目標カテゴリー数 | `20` | いいえ |
-| `DEFAULT_TARGET_OPTIONS` | デフォルトの目標選択肢数/カテゴリー | `20` | いいえ |
-| `GEMINI_MODEL` | 使用するGeminiモデル | `gemini-1.5-pro` | いいえ |
+| `DEBUG_MCP` | デバッグログ出力の有効化 | `false` | いいえ |
+| `NODE_ENV` | 実行環境（development/production） | - | いいえ |
 
 ---
 

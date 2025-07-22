@@ -11,7 +11,7 @@ export class GeminiClient {
   private lastRequestTime: number = 0;
   private readonly RATE_LIMIT_DELAY = 5000; // 5 seconds between requests
 
-  constructor(apiKey: string, model: string = 'gemini-1.5-pro') {
+  constructor(apiKey: string, model: string = 'gemini-2.5-flash-lite-preview-06-17') {
     this.client = new GoogleGenAI({ apiKey });
     this.model = model;
     logger.info('Gemini client initialized', { model });
@@ -23,13 +23,13 @@ export class GeminiClient {
   private async enforceRateLimit(): Promise<void> {
     const now = Date.now();
     const timeSinceLastRequest = now - this.lastRequestTime;
-    
+
     if (timeSinceLastRequest < this.RATE_LIMIT_DELAY) {
       const waitTime = this.RATE_LIMIT_DELAY - timeSinceLastRequest;
       logger.debug('Rate limiting: waiting', { waitTime });
       await new Promise(resolve => setTimeout(resolve, waitTime));
     }
-    
+
     this.lastRequestTime = Date.now();
   }
 
@@ -42,7 +42,7 @@ export class GeminiClient {
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         logger.debug('Generating content', { attempt, maxRetries });
-        
+
         const result = await this.client.models.generateContent({
           model: this.model,
           contents: [{ role: 'user', parts: [{ text: prompt }] }]
@@ -62,23 +62,23 @@ export class GeminiClient {
         } catch (parseError) {
           const errorMessage = parseError instanceof Error ? parseError.message : String(parseError);
           logger.warn('JSON parse failed, attempting auto-fix', { attempt, parseError: errorMessage });
-          
+
           // Try to fix JSON with AI
           const fixedJson = await this.fixJsonWithAI(text);
           if (fixedJson) {
             logger.info('JSON auto-fix successful', { attempt });
             return fixedJson;
           }
-          
+
           throw new Error(`JSON parsing failed: ${errorMessage}`);
         }
 
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error);
-        logger.error('Content generation failed', { 
-          attempt, 
-          maxRetries, 
-          error: errorMessage 
+        logger.error('Content generation failed', {
+          attempt,
+          maxRetries,
+          error: errorMessage
         });
 
         if (attempt === maxRetries) {
@@ -106,7 +106,7 @@ ${malformedJson}
 `;
 
       await this.enforceRateLimit();
-      
+
       const result = await this.client.models.generateContent({
         model: this.model,
         contents: [{ role: 'user', parts: [{ text: fixPrompt }] }]
@@ -136,10 +136,10 @@ export function getGeminiClient(): GeminiClient {
     if (!apiKey) {
       throw new Error('GEMINI_API_KEY environment variable is required');
     }
-    
-    const model = process.env.GEMINI_MODEL || 'gemini-1.5-pro';
+
+    const model = process.env.GEMINI_MODEL || 'gemini-2.5-flash-lite-preview-06-17';
     geminiClient = new GeminiClient(apiKey, model);
   }
-  
+
   return geminiClient;
 }

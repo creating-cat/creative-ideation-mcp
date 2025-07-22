@@ -36,7 +36,8 @@ Google Gemini APIを使用して、創造的思考のためのコンテキスト
         "@creating-cat/creative-ideation-mcp"
       ],
       "env": {
-        "GEMINI_API_KEY": "YOUR_GEMINI_API_KEY"
+        "GEMINI_API_KEY": "YOUR_GEMINI_API_KEY",
+        "GEMINI_MODEL": "gemini-2.5-flash-lite-preview-06-17"
       },
       "disabled": false,
       "timeout": 300
@@ -46,6 +47,7 @@ Google Gemini APIを使用して、創造的思考のためのコンテキスト
 ```
 
 * `YOUR_GEMINI_API_KEY`にはあなたのGemini API KEYを設定してください。
+* `GEMINI_MODEL`は使用するGeminiモデルを指定します。デフォルトは`gemini-2.5-flash-lite-preview-06-17`です。
 
 ## ランダムサンプリング機能
 
