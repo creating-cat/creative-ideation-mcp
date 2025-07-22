@@ -7,7 +7,7 @@
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { generateIdeaCategoriesTool } from './tools/generateIdeaCategories';
+import { generateCategoriesTool } from './tools/generateCategories';
 import { logger } from './utils/logger';
 import dotenv from 'dotenv';
 
@@ -41,12 +41,12 @@ const server = new McpServer({
 
 // メインツールを登録
 server.tool(
-  generateIdeaCategoriesTool.name,
-  generateIdeaCategoriesTool.description,
-  generateIdeaCategoriesTool.input_schema.shape,
+  generateCategoriesTool.name,
+  generateCategoriesTool.description,
+  generateCategoriesTool.input_schema.shape,
   async (args) => {
     try {
-      const result = await generateIdeaCategoriesTool.execute(args);
+      const result = await generateCategoriesTool.execute(args);
       
       // 期待される形式で返却することを確認
       if (result && result.content && result.content.length > 0 && result.content[0].text) {

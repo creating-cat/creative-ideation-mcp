@@ -22,7 +22,7 @@ import { CategoryGenerator } from '../modules/categoryGenerator';
 import { OptionGenerator } from '../modules/optionGenerator';
 
 // Input schema validation
-export const generateIdeaCategoriesSchema = z.object({
+export const generateCategoriesSchema = z.object({
   expert_role: z.string()
     .min(1, '専門家役割は必須です')
     .describe('カテゴリー生成時に採用する専門家の視点（例: "ゲームデザイナー", "料理研究家", "UXデザイナー"）'),
@@ -66,7 +66,7 @@ export const generateIdeaCategoriesSchema = z.object({
     .describe('追加の領域固有コンテキストや制約条件（任意）。既に決まっている要件や条件がある場合や、より具体的で専門的な要求がある場合に指定することで、カテゴリ生成時やオプション生成時にこの内容を考慮して生成します。')
 });
 
-export type GenerateIdeaCategoriesInput = z.infer<typeof generateIdeaCategoriesSchema>;
+export type GenerateCategoriesInput = z.infer<typeof generateCategoriesSchema>;
 
 /**
  * 出力形式の詳細
@@ -110,7 +110,7 @@ export interface GenerateIdeaCategoriesOutput {
   };
 }
 
-export const generateIdeaCategoriesTool = {
+export const generateCategoriesTool = {
   name: 'generate_categories',
   description: `AIの創造的思考を支援するため、専門家の視点から特定のテーマに対する多角的なカテゴリーと選択肢を生成します。ボードゲーム設計、レシピ開発、コンテンツ制作など、幅広い創作活動で活用できます。
 
@@ -127,7 +127,7 @@ export const generateIdeaCategoriesTool = {
 【典型的な出力例】
 カテゴリ例: "ゲーム要素", "プレイヤー数", "難易度設定" など
 選択肢例: ["協力型", "対戦型", "パズル要素"] など`,
-  input_schema: generateIdeaCategoriesSchema,
+  input_schema: generateCategoriesSchema,
 
   async execute(args: any): Promise<{ content: Array<{ type: 'text'; text: string }> }> {
     const startTime = Date.now();
@@ -135,7 +135,7 @@ export const generateIdeaCategoriesTool = {
 
     try {
       // Validate input
-      const validatedInput = generateIdeaCategoriesSchema.parse(args);
+      const validatedInput = generateCategoriesSchema.parse(args);
 
       // Initialize modules
       const categoryGenerator = new CategoryGenerator();
