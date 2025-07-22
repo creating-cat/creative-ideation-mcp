@@ -1,5 +1,5 @@
 {
-  "name": "@creating-cat/gemini-context-options-mcp-server",
+  "name": "@creating-cat/creative-ideation-mcp",
   "version": "0.1.0",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -11,27 +11,28 @@
     "prepare": "npm run build"
   },
   "bin": {
-    "gemini-context-options-mcp-server": "dist/index.js"
+    "creative-ideation-mcp": "dist/index.js"
   },
   "author": "creating-cat (https://creating-cat.com/)",
   "license": "MIT",
   "description": "An MCP server that generates contextual categories and options for creative thinking using the Gemini API.",
   "keywords": [
     "gemini",
-    "context-options",
+    "creative-ideation",
     "categories",
     "creative-thinking",
     "mcp",
-    "google-ai"
+    "google-ai",
+    "brainstorming"
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/creating-cat/gemini-context-options-mcp-server.git"
+    "url": "git+https://github.com/creating-cat/creative-ideation-mcp.git"
   },
   "bugs": {
-    "url": "https://github.com/creating-cat/gemini-context-options-mcp-server/issues"
+    "url": "https://github.com/creating-cat/creative-ideation-mcp/issues"
   },
-  "homepage": "https://github.com/creating-cat/gemini-context-options-mcp-server#readme",
+  "homepage": "https://github.com/creating-cat/creative-ideation-mcp#readme",
   "files": [
     "dist",
     "LICENSE",

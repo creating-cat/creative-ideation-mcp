@@ -111,7 +111,7 @@ export interface GenerateIdeaCategoriesOutput {
 }
 
 export const generateIdeaCategoriesTool = {
-  name: 'アイデアカテゴリ生成',
+  name: 'generate_categories',
   description: `AIの創造的思考を支援するため、専門家の視点から特定のテーマに対する多角的なカテゴリーと選択肢を生成します。ボードゲーム設計、レシピ開発、コンテンツ制作など、幅広い創作活動で活用できます。
 
 【重要】非決定性: 同じパラメータでも毎回異なる結果を生成します。この特性を活かして複数回実行することで、より多様なアイデアを収集できます。

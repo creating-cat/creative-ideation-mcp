@@ -1,4 +1,4 @@
-# Gemini Context Options MCP Server
+# Creative Ideation MCP Server
 
 Google Gemini APIを使用して、創造的思考のためのコンテキスト別カテゴリと選択肢を生成するMCP（Model Context Protocol）サーバーです。
 
@@ -30,11 +30,11 @@ Google Gemini APIを使用して、創造的思考のためのコンテキスト
 ```json
 {
   "mcpServers": {
-    "gemini-context-options-mcp-server": {
+    "creative-ideation-mcp": {
       "command": "npx",
       "args": [
         "-y",
-        "@creating-cat/gemini-context-options-mcp-server"
+        "@creating-cat/creative-ideation-mcp"
       ],
       "env": {
         "GEMINI_API_KEY": "YOUR_GEMINI_API_KEY"
@@ -84,9 +84,9 @@ AIは学習データの偏りにより、同じようなパターンの選択肢
 
 **動作の仕組み**: `target_options_per_category` で指定した数の選択肢を生成後、その数が `random_sample_size` を超える場合にランダムサンプリングが適用されます。
 
-## ツール: `アイデアカテゴリ生成`
+## ツール: `generate_categories`
 
-このMCPサーバーは `アイデアカテゴリ生成` という名前のツールを提供します。
+このMCPサーバーは `generate_categories` という名前のツールを提供します。
 
 ### 基本的な使用例
 
