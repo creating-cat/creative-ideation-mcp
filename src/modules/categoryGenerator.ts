@@ -7,10 +7,8 @@ import { getGeminiClient } from '../utils/gemini';
 import { logger } from '../utils/logger';
 
 export interface Category {
-  category_name_en: string;
-  category_name_ja: string;
-  category_description_en: string;
-  category_description_ja: string;
+  category_name: string;
+  category_description: string;
   example_choices: string[];
 }
 
@@ -41,11 +39,9 @@ const IMPROVED_CATEGORY_GENERATION_PROMPT = `
 
 [
   {
-    "category_name_en": "英語でのカテゴリ名",
-    "category_name_ja": "カテゴリ名の日本語訳", 
-    "category_description_en": "そのカテゴリの内容や目的、思考の観点としての機能が理解できるような簡潔な英語の説明",
-    "category_description_ja": "category_description_enの説明の日本語訳",
-    "example_choices": ["そのカテゴリに該当する典型的な選択肢の例を英語で3つ"]
+    "category_name": "カテゴリ名",
+    "category_description": "そのカテゴリの内容や目的、思考の観点としての機能が理解できるような簡潔な説明",
+    "example_choices": ["そのカテゴリに該当する典型的な選択肢の例を3つ"]
   }
 ]
 
@@ -67,7 +63,7 @@ export class CategoryGenerator {
     logger.info('Starting category generation', { targetCategories });
 
     // Build domain context section
-    const domainContextSection = domainContext 
+    const domainContextSection = domainContext
       ? `
 # 追加コンテキスト（全体要望）
 ${domainContext}
@@ -85,7 +81,7 @@ ${domainContext}
 
     try {
       const result = await this.geminiClient.generateContent(prompt);
-      
+
       // Validate the result is an array
       if (!Array.isArray(result)) {
         throw new Error('Expected array of categories');
@@ -98,14 +94,14 @@ ${domainContext}
 
       // Limit to targetCategories
       const limitedCategories = result.slice(0, targetCategories);
-      
-      logger.info('Category generation completed successfully', { 
+
+      logger.info('Category generation completed successfully', {
         totalGenerated: result.length,
-        returned: limitedCategories.length 
+        returned: limitedCategories.length
       });
-      
+
       return limitedCategories as Category[];
-      
+
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       logger.error('Category generation failed', { error: errorMessage });
@@ -115,9 +111,7 @@ ${domainContext}
 
   private validateCategory(category: any, index: number): void {
     const requiredFields = [
-      'category_name_en', 'category_name_ja',
-      'category_description_en', 'category_description_ja',
-      'example_choices'
+      'category_name', 'category_description', 'example_choices'
     ];
 
     for (const field of requiredFields) {

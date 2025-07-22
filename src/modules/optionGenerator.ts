@@ -84,27 +84,27 @@ export class OptionGenerator {
         );
 
         results.push({
-          name: category.category_name_ja,
-          description: category.category_description_ja,
+          name: category.category_name,
+          description: category.category_description,
           options
         });
 
         logger.debug('Options generated for category', { 
-          category: category.category_name_ja,
+          category: category.category_name,
           optionCount: options.length 
         });
 
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error);
         logger.error('Failed to generate options for category', {
-          category: category.category_name_ja,
+          category: category.category_name,
           error: errorMessage
         });
         
         // Use example choices as fallback
         results.push({
-          name: category.category_name_ja,
-          description: category.category_description_ja,
+          name: category.category_name,
+          description: category.category_description,
           options: category.example_choices
         });
       }
@@ -132,15 +132,15 @@ ${domainContext}
 
 # 注意事項
 上記は「${targetSubject}」全体に関する要望や制約です。
-カテゴリー「${category.category_name_ja}」の選択肢生成に関連する部分があれば考慮し、
+カテゴリー「${category.category_name}」の選択肢生成に関連する部分があれば考慮し、
 関連しない内容は無視してください。`
       : '';
 
     const prompt = IMPROVED_OPTIONS_GENERATION_PROMPT
       .replace(/{{EXPERT_ROLE}}/g, expertRole)
       .replace(/{{TARGET_SUBJECT}}/g, targetSubject)
-      .replace(/{{CATEGORY_NAME}}/g, category.category_name_ja)
-      .replace(/{{CATEGORY_DESCRIPTION}}/g, category.category_description_ja)
+      .replace(/{{CATEGORY_NAME}}/g, category.category_name)
+      .replace(/{{CATEGORY_DESCRIPTION}}/g, category.category_description)
       .replace(/{{TARGET_OPTIONS}}/g, targetOptionsPerCategory.toString())
       .replace(/{{DOMAIN_CONTEXT_SECTION}}/g, domainContextSection);
 
@@ -167,7 +167,7 @@ ${domainContext}
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       logger.error('Option generation failed for category', { 
-        category: category.category_name_ja,
+        category: category.category_name,
         error: errorMessage 
       });
       throw error;
