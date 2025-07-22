@@ -29,7 +29,7 @@ export const generateIdeaCategoriesSchema = z.object({
   target_subject: z.string()
     .min(1, '対象テーマは必須です')
     .describe('思考対象となるテーマや課題（例: "オリジナルボードゲーム", "新しいレシピ", "モバイルアプリのUI"）'),
-  
+
   // 生成数の制御（統一された命名）
   target_categories: z.number()
     .int()
@@ -38,7 +38,7 @@ export const generateIdeaCategoriesSchema = z.object({
     .optional()
     .default(20)
     .describe('生成するカテゴリ数の目安。テーマの複雑さに応じて自動調整されます（10-30、推奨: 15-25）'),
-  
+
   target_options_per_category: z.number()
     .int()
     .min(10)
@@ -46,13 +46,13 @@ export const generateIdeaCategoriesSchema = z.object({
     .optional()
     .default(20)
     .describe('各カテゴリの選択肢数の目安。カテゴリの性質により自動調整されます（例: 曜日→7個、5段階評価→5個）'),
-  
+
   // ランダム化制御
   randomize_selection: z.boolean()
     .optional()
     .default(false)
     .describe('大量の選択肢から一部をランダム選択するか。アイデアの多様性確保や効率的な絞り込みに有効'),
-  
+
   random_sample_size: z.number()
     .int()
     .min(5)
@@ -60,7 +60,7 @@ export const generateIdeaCategoriesSchema = z.object({
     .optional()
     .default(10)
     .describe('ランダム選択時の最大出力数。各カテゴリでこの数を超える場合にランダム選択を実行'),
-  
+
   domain_context: z.string()
     .optional()
     .describe('追加の領域固有コンテキストや制約条件（任意）。より具体的で専門的な要求がある場合に指定')
@@ -112,9 +112,19 @@ export interface GenerateIdeaCategoriesOutput {
 
 export const generateIdeaCategoriesTool = {
   name: 'アイデアカテゴリ生成',
-  description: 'AIの創造的思考を支援するため、専門家の視点から特定のテーマに対する多角的なカテゴリーと選択肢を生成します。ボードゲーム設計、レシピ開発、コンテンツ制作など、幅広い創作活動で活用できます。',
+  description: `AIの創造的思考を支援するため、専門家の視点から特定のテーマに対する多角的なカテゴリーと選択肢を生成します。ボードゲーム設計、レシピ開発、コンテンツ制作など、幅広い創作活動で活用できます。
+
+【出力形式】
+成功時: { success: true, data: { expert_role, target_subject, categories: [{ name, description, options: [...] }] } }
+失敗時: { success: false, error: { code, message } }
+
+【処理時間】約(1+カテゴリ数)×5-10秒（例：20カテゴリで2-4分）
+
+【典型的な出力例】
+カテゴリ例: "ゲーム要素", "プレイヤー数", "難易度設定" など
+選択肢例: ["協力型", "対戦型", "パズル要素"] など`,
   input_schema: generateIdeaCategoriesSchema,
-  
+
   async execute(args: any): Promise<{ content: Array<{ type: 'text'; text: string }> }> {
     const startTime = Date.now();
     logger.info('アイデアカテゴリ生成ツールの実行を開始', { args });
@@ -122,7 +132,7 @@ export const generateIdeaCategoriesTool = {
     try {
       // Validate input
       const validatedInput = generateIdeaCategoriesSchema.parse(args);
-      
+
       // Initialize modules
       const categoryGenerator = new CategoryGenerator();
       const optionGenerator = new OptionGenerator();
@@ -164,7 +174,7 @@ export const generateIdeaCategoriesTool = {
       };
 
       const executionTime = Date.now() - startTime;
-      logger.info('ツール実行が正常に完了', { 
+      logger.info('ツール実行が正常に完了', {
         executionTime,
         categoryCount: finalCategories.length,
         totalOptions: finalCategories.reduce((sum, cat) => sum + cat.options.length, 0),
@@ -178,9 +188,9 @@ export const generateIdeaCategoriesTool = {
     } catch (error) {
       const executionTime = Date.now() - startTime;
       const errorMessage = error instanceof Error ? error.message : String(error);
-      logger.error('ツール実行が失敗', { 
+      logger.error('ツール実行が失敗', {
         error: errorMessage,
-        executionTime 
+        executionTime
       });
 
       // Prepare error response
@@ -248,32 +258,32 @@ export const generateIdeaCategoriesTool = {
    */
   getErrorCode(error: Error): string {
     const message = error.message.toLowerCase();
-    
+
     // APIキー関連エラー - 対処法: 環境変数GEMINI_API_KEYを確認
     if (message.includes('gemini_api_key') || message.includes('api key')) {
       return 'INVALID_API_KEY';
     }
-    
+
     // レート制限エラー - 対処法: 時間をおいて再実行
     if (message.includes('rate limit') || message.includes('quota')) {
       return 'RATE_LIMIT_EXCEEDED';
     }
-    
+
     // ネットワークエラー - 対処法: 接続確認後に再実行
     if (message.includes('network') || message.includes('timeout')) {
       return 'NETWORK_ERROR';
     }
-    
+
     // バリデーションエラー - 対処法: パラメータを確認
     if (message.includes('validation') || message.includes('invalid')) {
       return 'VALIDATION_ERROR';
     }
-    
+
     // 生成処理失敗 - 対処法: パラメータ調整して再実行
     if (message.includes('generation') || message.includes('failed to generate')) {
       return 'GENERATION_FAILED';
     }
-    
+
     // その他の内部エラー - 対処法: ログ確認、サポートに連絡
     return 'INTERNAL_ERROR';
   }
