@@ -44,14 +44,14 @@ export const generateIdeaCategoriesSchema = z.object({
     .min(10)
     .max(200)
     .optional()
-    .default(20)
+    .default(50)
     .describe('各カテゴリの選択肢数の目安。カテゴリの性質により自動調整されます（例: 曜日→7個、5段階評価→5個）'),
 
   // ランダム化制御
   randomize_selection: z.boolean()
     .optional()
     .default(false)
-    .describe('大量の選択肢から一部をランダム選択するか。アイデアの多様性確保や効率的な絞り込みに有効'),
+    .describe('AIの選択パターン偏りを回避するランダムサンプリング機能。通常AIが選びがちな定番選択肢を避け、意外性のある創造的なアイデアを得られます。ブレインストーミングや新規性重視の場面で特に有効'),
 
   random_sample_size: z.number()
     .int()
@@ -59,11 +59,11 @@ export const generateIdeaCategoriesSchema = z.object({
     .max(200)  // target_options_per_categoryの最大値と同じ
     .optional()
     .default(10)
-    .describe('ランダム選択時の最大出力数。各カテゴリでこの数を超える場合にランダム選択を実行'),
+    .describe('ランダム選択時の最大出力数。各カテゴリでこの数を超える場合にランダム選択を実行。多様性を求める場合は target_options_per_category を大きく設定し、この値で絞り込むことを推奨'),
 
   domain_context: z.string()
     .optional()
-    .describe('追加の領域固有コンテキストや制約条件（任意）。より具体的で専門的な要求がある場合に指定')
+    .describe('追加の領域固有コンテキストや制約条件（任意）。既に決まっている要件や条件がある場合や、より具体的で専門的な要求がある場合に指定することで、カテゴリ生成時やオプション生成時にこの内容を考慮して生成します。')
 });
 
 export type GenerateIdeaCategoriesInput = z.infer<typeof generateIdeaCategoriesSchema>;
@@ -113,6 +113,10 @@ export interface GenerateIdeaCategoriesOutput {
 export const generateIdeaCategoriesTool = {
   name: 'アイデアカテゴリ生成',
   description: `AIの創造的思考を支援するため、専門家の視点から特定のテーマに対する多角的なカテゴリーと選択肢を生成します。ボードゲーム設計、レシピ開発、コンテンツ制作など、幅広い創作活動で活用できます。
+
+【重要】非決定性: 同じパラメータでも毎回異なる結果を生成します。この特性を活かして複数回実行することで、より多様なアイデアを収集できます。
+
+【ランダムサンプリング】randomize_selection=trueで、AIの選択パターン偏りを回避し、通常では選ばれにくい創造的な選択肢を得られます。新規性や意外性を重視する場面で推奨。
 
 【出力形式】
 成功時: { success: true, data: { expert_role, target_subject, categories: [{ name, description, options: [...] }] } }
