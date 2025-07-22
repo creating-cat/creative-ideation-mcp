@@ -34,7 +34,7 @@ validateEnvironment();
 
 // MCPサーバーを作成
 const server = new McpServer({
-  name: 'gemini-context-options-mcp-server',
+  name: 'creative-ideation-mcp',
   version: "0.1.0",
   description: 'Gemini APIを使用してAI創造的思考支援のためのコンテキスト対応カテゴリーと選択肢を生成するMCPサーバー',
 });
