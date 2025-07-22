@@ -1,5 +1,5 @@
 {
-  "name": "gemini-context-options-mcp-server",
+  "name": "@creating-cat/gemini-context-options-mcp-server",
   "version": "0.1.0",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -24,6 +24,14 @@
     "mcp",
     "google-ai"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/creating-cat/gemini-context-options-mcp-server.git"
+  },
+  "bugs": {
+    "url": "https://github.com/creating-cat/gemini-context-options-mcp-server/issues"
+  },
+  "homepage": "https://github.com/creating-cat/gemini-context-options-mcp-server#readme",
   "files": [
     "dist",
     "LICENSE",

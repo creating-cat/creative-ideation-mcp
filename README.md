@@ -12,59 +12,46 @@ Google Gemini APIを使用して、創造的思考のためのコンテキスト
 - **レート制限対応**: Gemini API用の5秒間隔制御
 - **エラーハンドリング**: 自動リトライとJSON修復機能
 
-## インストール
-
-### 必要な環境
+## 前提条件
 
 - Node.js 18以上
 - Google Gemini APIキー
 
-### ソースからのインストール
-
-```bash
-git clone <repository-url>
-cd gemini-context-options-mcp-server
-npm install
-npm run build
-```
-
-## 設定
-
-### 環境変数
-
-プロジェクトルートに`.env`ファイルを作成：
-
-```env
-GEMINI_API_KEY=your_gemini_api_key_here
-GEMINI_MODEL=gemini-1.5-pro
-LOG_LEVEL=INFO
-```
+## セットアップ
 
 ### Gemini APIキーの取得
 
 1. [Google AI Studio](https://aistudio.google.com/)にアクセス
 2. Googleアカウントでサインイン
 3. 新しいAPIキーを作成
-4. APIキーを`.env`ファイルにコピー
 
-## 使用方法
-
-### MCPサーバーとして使用
-
-MCPクライアント（Kiroなど）の設定に追加：
+### MCPサーバー設定例
 
 ```json
 {
   "mcpServers": {
-    "gemini-context-options": {
-      "command": "gemini-context-options-mcp-server",
+    "gemini-context-options-mcp-server": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@creating-cat/gemini-context-options-mcp-server"
+      ],
       "env": {
-        "GEMINI_API_KEY": "your_api_key_here"
-      }
+        "GEMINI_API_KEY": "YOUR_GEMINI_API_KEY"
+      },
+      "disabled": false,
+      "timeout": 300
     }
   }
 }
 ```
+
+* `YOUR_GEMINI_API_KEY`にはあなたのGemini API KEYを設定してください。
+  * `YOUR_GEMINI_API_KEY`を`${env:GEMINI_API_KEY}`とすることで環境変数から取得させることも可能です。(Kiroの機能)
+
+## ツール: `アイデアカテゴリ生成`
+
+このMCPサーバーは `アイデアカテゴリ生成` という名前のツールを提供します。
 
 ### 基本的な使用例
 
@@ -124,46 +111,30 @@ MCPクライアント（Kiroなど）の設定に追加：
 }
 ```
 
-### 主要パラメータ
+### 入力パラメータ
 
-- `expert_role` (必須): 専門家役割の視点
-- `target_subject` (必須): 考察対象のテーマ
-- `target_categories` (オプション): 生成カテゴリ数の目安 (デフォルト: 20)
-- `target_options_per_category` (オプション): 各カテゴリの選択肢数の目安 (デフォルト: 20)
-- `randomize_selection` (オプション): ランダム選択の有効化 (デフォルト: false)
-- `domain_context` (オプション): 追加のドメイン固有コンテキスト
+| パラメータ名 | 説明 | デフォルト値 |
+| ------------ | ---- | ------------ |
+| `expert_role` | (string, 必須) 専門家役割の視点（例: "ゲームデザイナー", "料理研究家"） | なし |
+| `target_subject` | (string, 必須) 考察対象のテーマ（例: "オリジナルボードゲーム", "新しいレシピ"） | なし |
+| `target_categories` | (number, 任意) 生成カテゴリ数の目安（10-30） | `20` |
+| `target_options_per_category` | (number, 任意) 各カテゴリの選択肢数の目安（10-200） | `20` |
+| `randomize_selection` | (boolean, 任意) ランダム選択の有効化 | `false` |
+| `random_sample_size` | (number, 任意) ランダム選択時の最大出力数（5-200） | `10` |
+| `domain_context` | (string, 任意) 追加のドメイン固有コンテキスト | なし |
 
-## 開発
+### 出力
 
-### スクリプト
+成功した場合、生成されたカテゴリと選択肢のJSONデータを返します。
+失敗した場合は、エラーコードとメッセージを含むエラー情報を返します。
 
-```bash
-npm run dev        # 開発モードで実行
-npm run build      # TypeScriptをビルド
-npm run start      # ビルド済みサーバーを実行
-npm run check      # 型チェック
-```
+## 注意事項
+
+* 処理時間は約(1+カテゴリ数)×5-10秒です（例：20カテゴリで2-4分）
+* APIキーの取り扱いには十分注意してください。
+* Gemini APIの利用制限にご注意ください。
 
 ## ライセンス
 
 MIT License - 詳細はLICENSEファイルを参照してください。
 
-## よくある問題
-
-### APIキーエラー
-```
-Error: GEMINI_API_KEY environment variable is required
-```
-- `.env`ファイルにAPIキーが正しく設定されているか確認
-- APIキーの有効性を[Google AI Studio](https://aistudio.google.com/)で確認
-
-### 処理が途中で止まる
-- ネットワーク接続を確認
-- Gemini APIの利用制限を確認
-
-## サポート
-
-問題や質問がある場合：
-- GitHubでissueを作成
-- ログで詳細なエラー情報を確認
-- Gemini APIキーが有効で十分なクォータがあることを確認
