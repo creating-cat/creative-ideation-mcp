@@ -2,7 +2,7 @@
 
 /**
  * Gemini Context Options MCP Server
- * An MCP server that generates contextual categories and options for creative thinking
+ * AI創造的思考支援のためのコンテキスト対応カテゴリー・選択肢生成MCPサーバー
  */
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -11,10 +11,10 @@ import { generateIdeaCategoriesTool } from './tools/generateIdeaCategories';
 import { logger } from './utils/logger';
 import dotenv from 'dotenv';
 
-// Load environment variables
+// 環境変数を読み込み
 dotenv.config();
 
-// Validate required environment variables
+// 必要な環境変数を検証
 function validateEnvironment(): void {
   const requiredVars = ['GEMINI_API_KEY'];
   const missingVars = requiredVars.filter(varName => !process.env[varName]);
@@ -29,17 +29,17 @@ function validateEnvironment(): void {
   }
 }
 
-// Validate environment before starting
+// 開始前に環境を検証
 validateEnvironment();
 
-// Create MCP server
+// MCPサーバーを作成
 const server = new McpServer({
   name: 'gemini-context-options-mcp-server',
   version: "0.1.0",
-  description: 'An MCP server that generates contextual categories and options for creative thinking using the Gemini API.',
+  description: 'Gemini APIを使用してAI創造的思考支援のためのコンテキスト対応カテゴリーと選択肢を生成するMCPサーバー',
 });
 
-// Register the main tool
+// メインツールを登録
 server.tool(
   generateIdeaCategoriesTool.name,
   generateIdeaCategoriesTool.description,
@@ -48,15 +48,15 @@ server.tool(
     try {
       const result = await generateIdeaCategoriesTool.execute(args);
       
-      // Ensure we return the expected format
+      // 期待される形式で返却することを確認
       if (result && result.content && result.content.length > 0 && result.content[0].text) {
         return {
           content: [{ type: "text", text: result.content[0].text }]
         };
       }
       
-      // Fallback for unexpected responses
-      // Unexpected tool response format - handled silently
+      // 予期しないレスポンスのフォールバック
+      // 予期しないツールレスポンス形式 - サイレントに処理
       return { 
         content: [{ 
           type: "text", 
@@ -89,7 +89,7 @@ server.tool(
   }
 );
 
-// Start the server
+// サーバーを開始
 async function startServer(): Promise<void> {
   try {
     const transport = new StdioServerTransport();
@@ -105,7 +105,7 @@ async function startServer(): Promise<void> {
   }
 }
 
-// Handle graceful shutdown
+// グレースフルシャットダウンを処理
 process.on('SIGINT', () => {
   process.exit(0);
 });
@@ -114,5 +114,5 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-// Start the server
+// サーバーを開始
 startServer();

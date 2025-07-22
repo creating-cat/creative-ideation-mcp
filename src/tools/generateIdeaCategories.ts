@@ -1,6 +1,19 @@
 /**
- * Generate Idea Categories Tool
- * Main MCP tool that orchestrates the entire process
+ * アイデアカテゴリ生成ツール
+ * 創造的思考支援のためのメインMCPツール
+ * 
+ * 【主な用途】
+ * - 新商品・サービスの企画検討
+ * - ゲーム・コンテンツ制作の要素整理  
+ * - マーケティング戦略の多角的検討
+ * - 教育・研修プログラムの設計
+ * - 問題解決のアプローチ整理
+ * 
+ * 【処理時間・パフォーマンス】
+ * - 処理時間: 約 (1 + カテゴリ数) × 5-10秒
+ * - API呼び出し: 1回（カテゴリ生成） + カテゴリ数回（選択肢生成）
+ * - レート制限: Gemini API制限により5秒間隔で実行
+ * - 推定所要時間: カテゴリ20個の場合 約2-4分
  */
 
 import { z } from 'zod';
@@ -11,11 +24,11 @@ import { OptionGenerator } from '../modules/optionGenerator';
 // Input schema validation
 export const generateIdeaCategoriesSchema = z.object({
   expert_role: z.string()
-    .min(1, 'Expert role is required')
-    .describe('The expert role perspective to take when generating categories (e.g., "ゲームデザイナー", "料理研究家")'),
+    .min(1, '専門家役割は必須です')
+    .describe('カテゴリー生成時に採用する専門家の視点（例: "ゲームデザイナー", "料理研究家", "UXデザイナー"）'),
   target_subject: z.string()
-    .min(1, 'Target subject is required')
-    .describe('The target subject or topic to think about (e.g., "オリジナルボードゲーム", "新しいレシピ")'),
+    .min(1, '対象テーマは必須です')
+    .describe('思考対象となるテーマや課題（例: "オリジナルボードゲーム", "新しいレシピ", "モバイルアプリのUI"）'),
   
   // 生成数の制御（統一された命名）
   target_categories: z.number()
@@ -24,7 +37,7 @@ export const generateIdeaCategoriesSchema = z.object({
     .max(30)
     .optional()
     .default(20)
-    .describe('生成するカテゴリ数の目安'),
+    .describe('生成するカテゴリ数の目安。テーマの複雑さに応じて自動調整されます（10-30、推奨: 15-25）'),
   
   target_options_per_category: z.number()
     .int()
@@ -32,13 +45,13 @@ export const generateIdeaCategoriesSchema = z.object({
     .max(200)
     .optional()
     .default(20)
-    .describe('1カテゴリあたりの選択肢生成数の目安（カテゴリの性質により自動調整）'),
+    .describe('各カテゴリの選択肢数の目安。カテゴリの性質により自動調整されます（例: 曜日→7個、5段階評価→5個）'),
   
   // ランダム化制御
   randomize_selection: z.boolean()
     .optional()
     .default(false)
-    .describe('選択肢をランダムに選ぶかどうか'),
+    .describe('大量の選択肢から一部をランダム選択するか。アイデアの多様性確保や効率的な絞り込みに有効'),
   
   random_sample_size: z.number()
     .int()
@@ -46,15 +59,39 @@ export const generateIdeaCategoriesSchema = z.object({
     .max(200)  // target_options_per_categoryの最大値と同じ
     .optional()
     .default(10)
-    .describe('ランダム選択時の最大出力数（実際の選択肢数がこれより少ない場合は全て出力）'),
+    .describe('ランダム選択時の最大出力数。各カテゴリでこの数を超える場合にランダム選択を実行'),
   
   domain_context: z.string()
     .optional()
-    .describe('Additional domain-specific context or constraints to consider (optional)')
+    .describe('追加の領域固有コンテキストや制約条件（任意）。より具体的で専門的な要求がある場合に指定')
 });
 
 export type GenerateIdeaCategoriesInput = z.infer<typeof generateIdeaCategoriesSchema>;
 
+/**
+ * 出力形式の詳細
+ * 
+ * 【成功時の出力構造】
+ * - success: true
+ * - data.expert_role: 指定された専門家役割
+ * - data.target_subject: 指定された対象テーマ
+ * - data.categories: 生成されたカテゴリ配列
+ *   - name: カテゴリ名（日本語）
+ *   - description: カテゴリの説明（日本語）
+ *   - options: 選択肢配列（日本語）
+ * 
+ * 【エラー時の出力構造】
+ * - success: false
+ * - error.code: エラーコード（INVALID_API_KEY, RATE_LIMIT_EXCEEDED等）
+ * - error.message: エラーメッセージ
+ * - error.details: 詳細情報（開発環境のみ）
+ * 
+ * 【推奨設定とベストプラクティス】
+ * - 企画立案: target_categories: 15-20, target_options_per_category: 20-30
+ * - ブレインストーミング: target_categories: 20-25, randomize_selection: true
+ * - 詳細検討: target_categories: 10-15, target_options_per_category: 30-50
+ * - 効率重視: target_categories: 10-12, random_sample_size: 8-12
+ */
 export interface GenerateIdeaCategoriesOutput {
   success: boolean;
   data?: {
@@ -74,13 +111,13 @@ export interface GenerateIdeaCategoriesOutput {
 }
 
 export const generateIdeaCategoriesTool = {
-  name: 'generate_idea_categories',
-  description: 'Generate contextual categories and options for creative thinking based on expert role and target subject',
+  name: 'アイデアカテゴリ生成',
+  description: 'AIの創造的思考を支援するため、専門家の視点から特定のテーマに対する多角的なカテゴリーと選択肢を生成します。ボードゲーム設計、レシピ開発、コンテンツ制作など、幅広い創作活動で活用できます。',
   input_schema: generateIdeaCategoriesSchema,
   
   async execute(args: any): Promise<{ content: Array<{ type: 'text'; text: string }> }> {
     const startTime = Date.now();
-    logger.info('Starting generate_idea_categories tool execution', { args });
+    logger.info('アイデアカテゴリ生成ツールの実行を開始', { args });
 
     try {
       // Validate input
@@ -90,8 +127,8 @@ export const generateIdeaCategoriesTool = {
       const categoryGenerator = new CategoryGenerator();
       const optionGenerator = new OptionGenerator();
 
-      // Step 1: Generate categories
-      logger.info('Step 1: Generating categories');
+      // ステップ1: カテゴリー生成
+      logger.info('ステップ1: カテゴリーを生成中');
       const categories = await categoryGenerator.generateCategories(
         validatedInput.expert_role,
         validatedInput.target_subject,
@@ -99,8 +136,8 @@ export const generateIdeaCategoriesTool = {
         validatedInput.domain_context
       );
 
-      // Step 2: Generate options for each category
-      logger.info('Step 2: Generating options for categories');
+      // ステップ2: 各カテゴリーの選択肢生成
+      logger.info('ステップ2: カテゴリーの選択肢を生成中');
       const categoriesWithOptions = await optionGenerator.generateOptionsForCategories(
         validatedInput.expert_role,
         validatedInput.target_subject,
@@ -109,10 +146,10 @@ export const generateIdeaCategoriesTool = {
         validatedInput.domain_context
       );
 
-      // Step 3: Apply random sampling if requested
+      // ステップ3: ランダムサンプリングの適用（要求された場合）
       let finalCategories = categoriesWithOptions;
       if (validatedInput.randomize_selection) {
-        logger.info('Step 3: Applying random sampling to options');
+        logger.info('ステップ3: 選択肢にランダムサンプリングを適用中');
         finalCategories = this.applyRandomSampling(categoriesWithOptions, validatedInput.random_sample_size);
       }
 
@@ -127,7 +164,7 @@ export const generateIdeaCategoriesTool = {
       };
 
       const executionTime = Date.now() - startTime;
-      logger.info('Tool execution completed successfully', { 
+      logger.info('ツール実行が正常に完了', { 
         executionTime,
         categoryCount: finalCategories.length,
         totalOptions: finalCategories.reduce((sum, cat) => sum + cat.options.length, 0),
@@ -141,7 +178,7 @@ export const generateIdeaCategoriesTool = {
     } catch (error) {
       const executionTime = Date.now() - startTime;
       const errorMessage = error instanceof Error ? error.message : String(error);
-      logger.error('Tool execution failed', { 
+      logger.error('ツール実行が失敗', { 
         error: errorMessage,
         executionTime 
       });
@@ -163,7 +200,18 @@ export const generateIdeaCategoriesTool = {
   },
 
   /**
-   * Apply random sampling to category options
+   * ランダムサンプリング適用
+   * 
+   * 各カテゴリの選択肢が指定されたサンプルサイズを超える場合、
+   * Fisher-Yatesアルゴリズムを使用してランダムに選択肢を絞り込みます。
+   * 
+   * @param categories - 選択肢を含むカテゴリ配列
+   * @param sampleSize - 各カテゴリの最大選択肢数
+   * @returns サンプリング適用後のカテゴリ配列
+   * 
+   * @example
+   * // 各カテゴリの選択肢を最大10個に制限
+   * const sampled = applyRandomSampling(categories, 10);
    */
   applyRandomSampling(
     categories: Array<{ name: string; description: string; options: string[] }>,
@@ -171,18 +219,18 @@ export const generateIdeaCategoriesTool = {
   ): Array<{ name: string; description: string; options: string[] }> {
     return categories.map(category => {
       if (category.options.length <= sampleSize) {
-        // If we have fewer options than sample size, return all options
+        // サンプルサイズより選択肢が少ない場合は全選択肢を返す
         return category;
       }
 
-      // Shuffle the options array using Fisher-Yates algorithm
+      // Fisher-Yatesアルゴリズムで選択肢配列をシャッフル
       const shuffledOptions = [...category.options];
       for (let i = shuffledOptions.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [shuffledOptions[i], shuffledOptions[j]] = [shuffledOptions[j], shuffledOptions[i]];
       }
 
-      // Take the first sampleSize options
+      // 最初のsampleSize個の選択肢を取得
       return {
         ...category,
         options: shuffledOptions.slice(0, sampleSize)
@@ -190,19 +238,43 @@ export const generateIdeaCategoriesTool = {
     });
   },
 
+  /**
+   * エラーコード判定
+   * 
+   * エラーメッセージの内容に基づいて適切なエラーコードを返します。
+   * 
+   * @param error - 発生したエラーオブジェクト
+   * @returns エラーコード文字列
+   */
   getErrorCode(error: Error): string {
-    if (error.message.includes('GEMINI_API_KEY')) {
+    const message = error.message.toLowerCase();
+    
+    // APIキー関連エラー - 対処法: 環境変数GEMINI_API_KEYを確認
+    if (message.includes('gemini_api_key') || message.includes('api key')) {
       return 'INVALID_API_KEY';
     }
-    if (error.message.includes('rate limit') || error.message.includes('quota')) {
+    
+    // レート制限エラー - 対処法: 時間をおいて再実行
+    if (message.includes('rate limit') || message.includes('quota')) {
       return 'RATE_LIMIT_EXCEEDED';
     }
-    if (error.message.includes('network') || error.message.includes('timeout')) {
+    
+    // ネットワークエラー - 対処法: 接続確認後に再実行
+    if (message.includes('network') || message.includes('timeout')) {
       return 'NETWORK_ERROR';
     }
-    if (error.message.includes('validation') || error.message.includes('Invalid')) {
+    
+    // バリデーションエラー - 対処法: パラメータを確認
+    if (message.includes('validation') || message.includes('invalid')) {
       return 'VALIDATION_ERROR';
     }
+    
+    // 生成処理失敗 - 対処法: パラメータ調整して再実行
+    if (message.includes('generation') || message.includes('failed to generate')) {
+      return 'GENERATION_FAILED';
+    }
+    
+    // その他の内部エラー - 対処法: ログ確認、サポートに連絡
     return 'INTERNAL_ERROR';
   }
 };
