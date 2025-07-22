@@ -16,20 +16,38 @@ export const generateIdeaCategoriesSchema = z.object({
   target_subject: z.string()
     .min(1, 'Target subject is required')
     .describe('The target subject or topic to think about (e.g., "オリジナルボードゲーム", "新しいレシピ")'),
-  max_categories: z.number()
+  
+  // 生成数の制御（統一された命名）
+  target_categories: z.number()
     .int()
-    .min(10, 'Must be at least 10')
-    .max(30, 'Cannot exceed 30')
+    .min(10)
+    .max(30)
     .optional()
     .default(20)
-    .describe('Target number of categories to generate as a guideline (default: 20, max: 30)'),
-  max_options_per_category: z.number()
+    .describe('生成するカテゴリ数の目安'),
+  
+  target_options_per_category: z.number()
     .int()
-    .min(10, 'Must be at least 10')
-    .max(50, 'Cannot exceed 100')
+    .min(10)
+    .max(200)
     .optional()
-    .default(100)
-    .describe('Target number of options to generate per category as a guideline (default: 50, max: 100)'),
+    .default(20)
+    .describe('1カテゴリあたりの選択肢生成数の目安（カテゴリの性質により自動調整）'),
+  
+  // ランダム化制御
+  randomize_selection: z.boolean()
+    .optional()
+    .default(false)
+    .describe('選択肢をランダムに選ぶかどうか'),
+  
+  random_sample_size: z.number()
+    .int()
+    .min(5)
+    .max(200)  // target_options_per_categoryの最大値と同じ
+    .optional()
+    .default(10)
+    .describe('ランダム選択時の最大出力数（実際の選択肢数がこれより少ない場合は全て出力）'),
+  
   domain_context: z.string()
     .optional()
     .describe('Additional domain-specific context or constraints to consider (optional)')
@@ -77,7 +95,7 @@ export const generateIdeaCategoriesTool = {
       const categories = await categoryGenerator.generateCategories(
         validatedInput.expert_role,
         validatedInput.target_subject,
-        validatedInput.max_categories,
+        validatedInput.target_categories,
         validatedInput.domain_context
       );
 
@@ -87,9 +105,16 @@ export const generateIdeaCategoriesTool = {
         validatedInput.expert_role,
         validatedInput.target_subject,
         categories,
-        validatedInput.max_options_per_category,
+        validatedInput.target_options_per_category,
         validatedInput.domain_context
       );
+
+      // Step 3: Apply random sampling if requested
+      let finalCategories = categoriesWithOptions;
+      if (validatedInput.randomize_selection) {
+        logger.info('Step 3: Applying random sampling to options');
+        finalCategories = this.applyRandomSampling(categoriesWithOptions, validatedInput.random_sample_size);
+      }
 
       // Prepare successful response
       const response: GenerateIdeaCategoriesOutput = {
@@ -97,15 +122,16 @@ export const generateIdeaCategoriesTool = {
         data: {
           expert_role: validatedInput.expert_role,
           target_subject: validatedInput.target_subject,
-          categories: categoriesWithOptions
+          categories: finalCategories
         }
       };
 
       const executionTime = Date.now() - startTime;
       logger.info('Tool execution completed successfully', { 
         executionTime,
-        categoryCount: categoriesWithOptions.length,
-        totalOptions: categoriesWithOptions.reduce((sum, cat) => sum + cat.options.length, 0)
+        categoryCount: finalCategories.length,
+        totalOptions: finalCategories.reduce((sum, cat) => sum + cat.options.length, 0),
+        randomSamplingApplied: validatedInput.randomize_selection
       });
 
       return {
@@ -136,6 +162,33 @@ export const generateIdeaCategoriesTool = {
     }
   },
 
+  /**
+   * Apply random sampling to category options
+   */
+  applyRandomSampling(
+    categories: Array<{ name: string; description: string; options: string[] }>,
+    sampleSize: number
+  ): Array<{ name: string; description: string; options: string[] }> {
+    return categories.map(category => {
+      if (category.options.length <= sampleSize) {
+        // If we have fewer options than sample size, return all options
+        return category;
+      }
+
+      // Shuffle the options array using Fisher-Yates algorithm
+      const shuffledOptions = [...category.options];
+      for (let i = shuffledOptions.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffledOptions[i], shuffledOptions[j]] = [shuffledOptions[j], shuffledOptions[i]];
+      }
+
+      // Take the first sampleSize options
+      return {
+        ...category,
+        options: shuffledOptions.slice(0, sampleSize)
+      };
+    });
+  },
 
   getErrorCode(error: Error): string {
     if (error.message.includes('GEMINI_API_KEY')) {

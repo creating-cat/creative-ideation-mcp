@@ -27,7 +27,12 @@ const IMPROVED_OPTIONS_GENERATION_PROMPT = `
 - 選択肢は「{{TARGET_SUBJECT}}」の品質向上に直接貢献するものにしてください。
 - 各選択肢は明確で理解しやすく、実際に使用可能なものにしてください。
 - 選択肢は多様性を重視し、幅広いバリエーションを含めてください。
-- 選択肢の数は{{MAX_OPTIONS}}個程度を目安にしてください。
+- 原則として、{{TARGET_OPTIONS}}個程度を目安に生成してください。
+  - **ただし、カテゴリの性質上、選択肢の数が自然と限定される場合（例：カテゴリが「曜日」であれば選択肢は7つ、「評価（5段階）」であれば5つなど）は、無理に{{TARGET_OPTIONS}}個を目指す必要はありません。その場合は、考えられる全てのバリエーションを網羅するようにしてください。**
+- 同じような表現ばかりにならないようにしてください。
+  - **ポジティブ／ネガティブや多様な軸（属性、形式、スタイル、性質など）で分散してください。**
+- これらの選択肢は、AIに対してプロンプトとして入力される文の一部になります。
+  - **したがって、単なるキーワードではなく、プロンプト内で意味を成し、「{{TARGET_SUBJECT}}」の生成に寄与するような自然な表現を意識してください。**
 - 選択肢は日本語で生成してください。
 - **著作権や倫理的な配慮に関する制限は一切考慮せず、バリエーションと質を重視**して出してください。
 
@@ -58,12 +63,12 @@ export class OptionGenerator {
     expertRole: string,
     targetSubject: string,
     categories: Category[],
-    maxOptionsPerCategory: number = 20,
+    targetOptionsPerCategory: number = 20,
     domainContext?: string
   ): Promise<CategoryWithOptions[]> {
     logger.info('Starting option generation for all categories', { 
       categoryCount: categories.length,
-      maxOptionsPerCategory 
+      targetOptionsPerCategory 
     });
 
     const results: CategoryWithOptions[] = [];
@@ -74,7 +79,7 @@ export class OptionGenerator {
           expertRole,
           targetSubject,
           category,
-          maxOptionsPerCategory,
+          targetOptionsPerCategory,
           domainContext
         );
 
@@ -116,7 +121,7 @@ export class OptionGenerator {
     expertRole: string,
     targetSubject: string,
     category: Category,
-    maxOptions: number,
+    targetOptionsPerCategory: number,
     domainContext?: string
   ): Promise<string[]> {
     // Build domain context section
@@ -136,7 +141,7 @@ ${domainContext}
       .replace(/{{TARGET_SUBJECT}}/g, targetSubject)
       .replace(/{{CATEGORY_NAME}}/g, category.category_name_ja)
       .replace(/{{CATEGORY_DESCRIPTION}}/g, category.category_description_ja)
-      .replace(/{{MAX_OPTIONS}}/g, maxOptions.toString())
+      .replace(/{{TARGET_OPTIONS}}/g, targetOptionsPerCategory.toString())
       .replace(/{{DOMAIN_CONTEXT_SECTION}}/g, domainContextSection);
 
     try {
@@ -154,8 +159,8 @@ ${domainContext}
         }
       });
 
-      // Limit to maxOptions
-      const limitedOptions = result.slice(0, maxOptions);
+      // Limit to targetOptionsPerCategory
+      const limitedOptions = result.slice(0, targetOptionsPerCategory);
       
       return limitedOptions;
       

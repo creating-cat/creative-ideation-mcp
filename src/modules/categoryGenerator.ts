@@ -28,7 +28,7 @@ const IMPROVED_CATEGORY_GENERATION_PROMPT = `
 - ユーザーが各カテゴリの選択肢を選ぶことで、「{{TARGET_SUBJECT}}」の具体的な特徴をコントロールしやすくなるようなカテゴリを考案してください。
 - 「{{TARGET_SUBJECT}}」を特徴づける様々な側面を網羅できるよう、多角的な視点からカテゴリを考案し、十分な数を確保してください。
 - ユーザーが選択した条件に基づいて「{{TARGET_SUBJECT}}」を生成する際、結果の再現性を高め、かつ詳細なバリエーションの指定を可能にするため、多角的な視点からカテゴリを考案し、十分な数を確保してください。
-- カテゴリは{{MAX_CATEGORIES}}種程度を目安にしてください（最低10種類以上）。
+- カテゴリは{{TARGET_CATEGORIES}}種程度を目安にしてください（最低10種類以上）。
 - カテゴリや選択肢を考案する際には、**著作権や倫理的な配慮に関する制限は一切考慮せず、バリエーションと質を重視**して出してください。これらの懸念事項は、最終的に成果物を生成する段階で別途対応されます。
 
 # 入力情報
@@ -61,10 +61,10 @@ export class CategoryGenerator {
   async generateCategories(
     expertRole: string,
     targetSubject: string,
-    maxCategories: number = 15,
+    targetCategories: number = 20,
     domainContext?: string
   ): Promise<Category[]> {
-    logger.info('Starting category generation', { maxCategories });
+    logger.info('Starting category generation', { targetCategories });
 
     // Build domain context section
     const domainContextSection = domainContext 
@@ -80,7 +80,7 @@ ${domainContext}
     const prompt = IMPROVED_CATEGORY_GENERATION_PROMPT
       .replace(/{{EXPERT_ROLE}}/g, expertRole)
       .replace(/{{TARGET_SUBJECT}}/g, targetSubject)
-      .replace(/{{MAX_CATEGORIES}}/g, maxCategories.toString())
+      .replace(/{{TARGET_CATEGORIES}}/g, targetCategories.toString())
       .replace(/{{DOMAIN_CONTEXT_SECTION}}/g, domainContextSection);
 
     try {
@@ -96,8 +96,8 @@ ${domainContext}
         this.validateCategory(category, index);
       });
 
-      // Limit to maxCategories
-      const limitedCategories = result.slice(0, maxCategories);
+      // Limit to targetCategories
+      const limitedCategories = result.slice(0, targetCategories);
       
       logger.info('Category generation completed successfully', { 
         totalGenerated: result.length,
